@@ -1,0 +1,507 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>Английский словарь с проверкой</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            font-family: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+        }
+        body {
+            background: #f0f7ff;
+            margin: 0;
+            padding: 20px;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .app-container {
+            max-width: 900px;
+            width: 100%;
+            background: white;
+            border-radius: 32px;
+            box-shadow: 0 20px 35px -10px rgba(0, 0, 0, 0.1);
+            padding: 24px 28px;
+        }
+        h1 {
+            font-size: 1.9rem;
+            margin-top: 0;
+            margin-bottom: 10px;
+            color: #1e3c72;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        h1 small {
+            font-size: 0.8rem;
+            background: #e9ecef;
+            padding: 5px 12px;
+            border-radius: 40px;
+            font-weight: normal;
+            color: #2c3e66;
+        }
+        .add-word-section {
+            background: #eef2fa;
+            padding: 20px;
+            border-radius: 28px;
+            margin: 20px 0;
+        }
+        .form-row {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            align-items: flex-end;
+        }
+        .input-group {
+            flex: 1;
+            min-width: 150px;
+        }
+        .input-group label {
+            display: block;
+            font-weight: 600;
+            font-size: 0.8rem;
+            margin-bottom: 6px;
+            color: #1f4a7a;
+        }
+        input {
+            width: 100%;
+            padding: 12px 14px;
+            border: 1px solid #cbd5e1;
+            border-radius: 20px;
+            font-size: 1rem;
+            transition: 0.2s;
+            background: white;
+        }
+        input:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59,130,246,0.2);
+        }
+        button {
+            background: #1e3c72;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 40px;
+            font-weight: bold;
+            font-size: 0.95rem;
+            cursor: pointer;
+            transition: 0.2s;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        button:hover {
+            background: #0f2b4f;
+            transform: translateY(-1px);
+        }
+        .danger-btn {
+            background: #b91c1c;
+        }
+        .danger-btn:hover {
+            background: #991b1b;
+        }
+        .words-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            border-radius: 20px;
+            overflow: hidden;
+        }
+        .words-table th, .words-table td {
+            text-align: left;
+            padding: 12px 10px;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        .words-table th {
+            background: #e2eafc;
+            color: #0a2b44;
+        }
+        .edit-btn, .delete-btn {
+            padding: 5px 12px;
+            font-size: 0.75rem;
+            margin: 0 4px;
+            border-radius: 30px;
+        }
+        .edit-btn {
+            background: #2c6e9e;
+        }
+        .delete-btn {
+            background: #c2410c;
+        }
+        .empty-message {
+            text-align: center;
+            color: #6b7280;
+            padding: 30px;
+            font-style: italic;
+        }
+        /* Модальное окно (проверка) */
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            backdrop-filter: blur(3px);
+        }
+        .modal-content {
+            background: white;
+            max-width: 380px;
+            width: 90%;
+            border-radius: 48px;
+            padding: 28px 24px;
+            text-align: center;
+            box-shadow: 0 25px 40px black;
+            animation: fadeInUp 0.2s ease;
+        }
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        .modal-content h3 {
+            font-size: 1.8rem;
+            margin: 0 0 20px 0;
+            color: #0a2b44;
+            word-break: break-word;
+        }
+        .modal-content input {
+            width: 100%;
+            margin: 15px 0;
+            text-align: center;
+            font-size: 1.2rem;
+        }
+        .modal-buttons {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+        }
+        .check-btn {
+            background: #2b6e3c;
+            flex: 1;
+        }
+        .cancel-btn {
+            background: #6c757d;
+        }
+        .footer-note {
+            font-size: 0.75rem;
+            text-align: center;
+            margin-top: 25px;
+            color: #5c6f87;
+        }
+        @media (max-width: 550px) {
+            .app-container {
+                padding: 16px;
+            }
+            .form-row {
+                flex-direction: column;
+            }
+            button {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="app-container" id="app">
+    <h1>📖 Мой словарь <small>учим английский</small></h1>
+    
+    <div class="add-word-section">
+        <div class="form-row">
+            <div class="input-group">
+                <label>🇬🇧 Английское слово</label>
+                <input type="text" id="engInput" placeholder="например: apple" autocomplete="off">
+            </div>
+            <div class="input-group">
+                <label>🇷🇺 Перевод (русский)</label>
+                <input type="text" id="rusInput" placeholder="например: яблоко" autocomplete="off">
+            </div>
+            <button id="addWordBtn">➕ Добавить слово</button>
+        </div>
+    </div>
+
+    <div style="display: flex; justify-content: space-between; align-items: baseline;">
+        <h3>📚 Все слова ({{wordsCount}})</h3>
+        <button id="forceQuizBtn" style="background:#2c6e9e; padding: 6px 18px;">🎲 Проверить себя сейчас</button>
+    </div>
+
+    <div id="wordsListContainer">
+        <!-- Таблица слов будет рендериться через js -->
+    </div>
+    <div class="footer-note">
+        💡 Когда вы заходите в приложение — автоматически появляется окно с проверкой.<br>
+        ❌ Неправильный перевод ➜ слово удаляется из словаря.<br>
+        ✅ Правильный перевод ➜ слово остаётся.
+    </div>
+</div>
+
+<script>
+    // ---------- Хранилище ----------
+    let vocabulary = [];  // каждый объект: { id, eng, rus }
+
+    // Загрузка из localStorage
+    function loadData() {
+        const saved = localStorage.getItem('english_dictionary');
+        if(saved) {
+            try {
+                vocabulary = JSON.parse(saved);
+            } catch(e) { vocabulary = []; }
+        }
+        if(!vocabulary || !Array.isArray(vocabulary)) vocabulary = [];
+        // добавим id если нет (старые данные)
+        vocabulary = vocabulary.map((word, idx) => {
+            if(!word.id) word.id = Date.now() + idx + Math.random();
+            return word;
+        });
+        renderWordsTable();
+    }
+
+    // Сохранение
+    function saveData() {
+        localStorage.setItem('english_dictionary', JSON.stringify(vocabulary));
+        renderWordsTable();
+    }
+
+    // Добавить слово
+    function addWord(eng, rus) {
+        const trimmedEng = eng.trim().toLowerCase();
+        const trimmedRus = rus.trim();
+        if(trimmedEng === '' || trimmedRus === '') {
+            alert('Пожалуйста, заполните оба поля!');
+            return false;
+        }
+        // Проверка на дубликат английского (необязательно, но удобно)
+        const exists = vocabulary.some(w => w.eng === trimmedEng);
+        if(exists) {
+            alert(`Слово "${trimmedEng}" уже есть в словаре. Если хотите обновить перевод, используйте редактирование.`);
+            return false;
+        }
+        const newWord = {
+            id: Date.now() + Math.random() * 10000,
+            eng: trimmedEng,
+            rus: trimmedRus
+        };
+        vocabulary.push(newWord);
+        saveData();
+        return true;
+    }
+
+    // Удалить слово по id
+    function deleteWordById(id) {
+        vocabulary = vocabulary.filter(w => w.id !== id);
+        saveData();
+    }
+
+    // Редактировать слово
+    function editWord(id, newEng, newRus) {
+        const index = vocabulary.findIndex(w => w.id === id);
+        if(index !== -1) {
+            vocabulary[index].eng = newEng.trim().toLowerCase();
+            vocabulary[index].rus = newRus.trim();
+            saveData();
+        }
+    }
+
+    // Рендер таблицы
+    function renderWordsTable() {
+        const container = document.getElementById('wordsListContainer');
+        const countSpan = document.querySelector('#app h3');
+        if(countSpan) countSpan.innerHTML = `📚 Все слова (${vocabulary.length})`;
+        
+        if(vocabulary.length === 0) {
+            container.innerHTML = `<div class="empty-message">✨ Словарь пуст. Добавьте первые слова выше ✨</div>`;
+            return;
+        }
+        
+        let html = `<table class="words-table">
+                        <thead>
+                            <tr><th>🇬🇧 English</th><th>🇷🇺 Русский</th><th style="width:110px">Действия</th></tr>
+                        </thead>
+                        <tbody>`;
+        vocabulary.forEach(word => {
+            html += `<tr>
+                        <td><strong>${escapeHtml(word.eng)}</strong></td>
+                        <td>${escapeHtml(word.rus)}</td>
+                        <td>
+                            <button class="edit-btn" data-id="${word.id}">✏️</button>
+                            <button class="delete-btn" data-id="${word.id}">🗑️</button>
+                        </td>
+                     </tr>`;
+        });
+        html += `</tbody></table>`;
+        container.innerHTML = html;
+        
+        // Привязываем события редактирования/удаления
+        document.querySelectorAll('.edit-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const id = parseFloat(btn.getAttribute('data-id'));
+                const word = vocabulary.find(w => w.id === id);
+                if(word) {
+                    const newEng = prompt('Изменить английское слово:', word.eng);
+                    if(newEng !== null) {
+                        const newRus = prompt('Изменить перевод на русский:', word.rus);
+                        if(newRus !== null) editWord(id, newEng, newRus);
+                    }
+                }
+            });
+        });
+        
+        document.querySelectorAll('.delete-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const id = parseFloat(btn.getAttribute('data-id'));
+                if(confirm('Удалить это слово из словаря?')) {
+                    deleteWordById(id);
+                }
+            });
+        });
+    }
+    
+    function escapeHtml(str) {
+        return str.replace(/[&<>]/g, function(m) {
+            if(m === '&') return '&amp;';
+            if(m === '<') return '&lt;';
+            if(m === '>') return '&gt;';
+            return m;
+        });
+    }
+    
+    // ---------- Модальное окно с проверкой ----------
+    // Показываем случайное слово. Если ответ правильный -> ничего не делаем.
+    // Если ответ неправильный -> удаляем это слово из словаря.
+    function showQuizModal() {
+        if(vocabulary.length === 0) {
+            // если слов нет, показывать нечего
+            return;
+        }
+        
+        // Выбираем случайное слово
+        const randomIndex = Math.floor(Math.random() * vocabulary.length);
+        const wordToTest = vocabulary[randomIndex];
+        if(!wordToTest) return;
+        
+        // Создаём модальное окно
+        const modalDiv = document.createElement('div');
+        modalDiv.className = 'modal';
+        modalDiv.innerHTML = `
+            <div class="modal-content">
+                <h3>📖 ${escapeHtml(wordToTest.eng)}</h3>
+                <p style="color:#4b5563;">Введите перевод на русский:</p>
+                <input type="text" id="quizAnswer" placeholder="Перевод..." autocomplete="off">
+                <div class="modal-buttons">
+                    <button class="check-btn" id="submitQuiz">✅ Проверить</button>
+                    <button class="cancel-btn" id="closeQuiz">❌ Отмена</button>
+                </div>
+            </div>
+        `;
+        document.body.appendChild(modalDiv);
+        
+        const answerInput = modalDiv.querySelector('#quizAnswer');
+        answerInput.focus();
+        
+        // Функция проверки
+        function checkAnswer() {
+            const userAnswer = answerInput.value.trim().toLowerCase();
+            const correctAnswer = wordToTest.rus.trim().toLowerCase();
+            
+            if(userAnswer === correctAnswer) {
+                // Правильно: слово остаётся в словаре
+                alert(`✅ Верно! "${wordToTest.eng}" остаётся в словаре.`);
+                modalDiv.remove();
+                // Возможно, предложить ещё тест? Нет, просто закрываем.
+            } else {
+                // Неправильно: слово удаляется навсегда
+                alert(`❌ Неправильно! Правильный перевод: "${wordToTest.rus}".\nСлово "${wordToTest.eng}" удалено из словаря. Вам нужно добавить его заново.`);
+                // Удаляем слово
+                deleteWordById(wordToTest.id);
+                modalDiv.remove();
+            }
+        }
+        
+        const submitBtn = modalDiv.querySelector('#submitQuiz');
+        const cancelBtn = modalDiv.querySelector('#closeQuiz');
+        
+        submitBtn.addEventListener('click', checkAnswer);
+        cancelBtn.addEventListener('click', () => {
+            modalDiv.remove();
+        });
+        
+        // Enter в поле ввода
+        answerInput.addEventListener('keypress', (e) => {
+            if(e.key === 'Enter') {
+                e.preventDefault();
+                checkAnswer();
+            }
+        });
+    }
+    
+    // Функция, которая показывает всплывающее окно при загрузке,
+    // но только если словарь не пуст. При этом не спамит окнами.
+    let hasShownStartupQuiz = false;  // чтобы при загрузке страницы окно показалось 1 раз
+    
+    function maybeShowStartupQuiz() {
+        if(!hasShownStartupQuiz && vocabulary.length > 0) {
+            hasShownStartupQuiz = true;
+            // Небольшая задержка, чтобы DOM полностью отрисовался
+            setTimeout(() => {
+                showQuizModal();
+            }, 300);
+        }
+    }
+    
+    // ---------- Инициализация и обработчики ----------
+    document.addEventListener('DOMContentLoaded', () => {
+        loadData();
+        
+        const addBtn = document.getElementById('addWordBtn');
+        const engInput = document.getElementById('engInput');
+        const rusInput = document.getElementById('rusInput');
+        const forceQuizBtn = document.getElementById('forceQuizBtn');
+        
+        addBtn.addEventListener('click', () => {
+            const eng = engInput.value;
+            const rus = rusInput.value;
+            if(addWord(eng, rus)) {
+                engInput.value = '';
+                rusInput.value = '';
+                engInput.focus();
+            }
+        });
+        
+        forceQuizBtn.addEventListener('click', () => {
+            if(vocabulary.length === 0) {
+                alert('В словаре пока нет слов. Добавьте хотя бы одно слово для проверки!');
+                return;
+            }
+            showQuizModal();
+        });
+        
+        // Также добавим возможность ввода по нажатию Enter в полях
+        const handleEnter = (e) => {
+            if(e.key === 'Enter') {
+                addBtn.click();
+            }
+        };
+        engInput.addEventListener('keypress', handleEnter);
+        rusInput.addEventListener('keypress', handleEnter);
+        
+        // После того как загрузились данные, попробуем показать модалку (всплывающее окно)
+        // НО нужно убедиться, что vocabulary уже загружен. loadData вызывает render, а после него покажем.
+        // Используем microtask или setTimeout
+        setTimeout(() => {
+            maybeShowStartupQuiz();
+        }, 100);
+    });
+</script>
+</body>
+</html>
